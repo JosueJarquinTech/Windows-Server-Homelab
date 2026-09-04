@@ -434,8 +434,8 @@ instead of the network share.
 
 Installed Tailscale on:
 
-- MacBook M2
-- DC01
+- Windows 11 client VM 
+- DC01 VM
 
 ### Benefits
 
