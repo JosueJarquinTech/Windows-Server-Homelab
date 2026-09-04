@@ -2,6 +2,21 @@
 
 A hands-on Windows Server infrastructure project built to develop System Administration skills through the deployment, administration, and troubleshooting of Active Directory, DNS, PKI, Group Policy, Hyper-V networking, and secure remote administration.
 
+## Skills Demonstrated
+
+- Windows Server Administration
+- Active Directory
+- DNS
+- DHCP
+- PKI / Active Directory Certificate Services
+- Group Policy
+- Group Policy Preferences
+- Hyper-V
+- Tailscale
+- Network Troubleshooting
+- Remote Administration
+- File Services
+
 ## Project Goals
 
 - Build an enterprise-style Active Directory environment
