@@ -210,25 +210,17 @@ _msdcs.josue.lab
 
 ### DNS Forwarders
 
- 
-
 Configured DNS forwarders to provide external name resolution for domain clients.
-
- 
 
 Forwarders configured:
 
- 
-
 ```text
-8
-8.8.8.8 (Google DNS)
-9
-1.1.1.1 (Cloudflare DNS)
-10
-```
 
- 
+8.8.8.8 (Google DNS)
+
+1.1.1.1 (Cloudflare DNS)
+
+```
 
 This allowed domain clients to continue resolving Active Directory resources while also accessing internet services.
 
