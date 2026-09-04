@@ -174,14 +174,14 @@ Configured a static IP address on the external network adapter of DC01.
 
 ```text
 External Interface
-IP Address: 192.168.4.120
+IP Address: 192.168.x.x/24
 ```
 
 The internal lab network interface remained configured as:
 
 ```text
 Internal Interface
-IP Address: 10.0.0.10
+IP Address: 10.x.x.x/24
 ```
 
 #### Outcome
