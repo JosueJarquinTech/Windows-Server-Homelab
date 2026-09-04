@@ -208,7 +208,29 @@ josue.lab
 _msdcs.josue.lab
 ```
 
-Configured DNS forwarders to enable external name resolution for domain clients.
+### DNS Forwarders
+2
+ 
+3
+Configured DNS forwarders to provide external name resolution for domain clients.
+4
+ 
+5
+Forwarders configured:
+6
+ 
+7
+```text
+8
+8.8.8.8 (Google DNS)
+9
+1.1.1.1 (Cloudflare DNS)
+10
+```
+11
+ 
+12
+This allowed domain clients to continue resolving Active Directory resources while also accessing internet services.
 
 ### Validation Tools
 
