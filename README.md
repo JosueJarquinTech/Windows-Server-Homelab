@@ -43,3 +43,39 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 ### Policy Management
 - Group Policy
 - Group Policy Preferences
+  
+## Active Directory Deployment
+
+### Domain
+
+Created and configured:
+
+```text
+josue.lab
+```
+
+### Installed Roles
+
+- Active Directory Domain Services
+- DNS Server
+
+### Organizational Unit Structure
+
+```text
+Administration
+Corp Users
+Groups
+Service Accounts
+Workstations
+```
+
+### User Accounts
+
+Created:
+
+```text
+jjarquin
+jjarquin-admin
+```
+
+Implemented administrative account separation by using a dedicated privileged account for administrative tasks.
