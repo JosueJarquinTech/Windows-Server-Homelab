@@ -126,6 +126,62 @@ josue.lab
 
 ---
 
+---
+
+## Server Network Configuration
+
+### Static IP Configuration
+
+#### Initial State
+
+During the initial deployment phase, DC01 was configured to receive its IP address through DHCP.
+
+#### Problem
+
+Domain Controllers provide critical infrastructure services such as:
+
+- Active Directory
+- DNS
+- DHCP
+- Group Policy
+
+These services depend on clients being able to reliably locate the server.
+
+Using a dynamically assigned IP address can create operational issues if the address changes due to:
+
+- DHCP lease expiration
+- Network reconfiguration
+- Router configuration changes
+
+#### Resolution
+
+Configured a static IP address on the external network adapter of DC01.
+
+```text
+External Interface
+IP Address: 192.168.4.120
+```
+
+The internal lab network interface remained configured as:
+
+```text
+Internal Interface
+IP Address: 10.0.0.10
+```
+
+#### Outcome
+
+- Consistent access to domain services
+- Stable DNS functionality
+- Reliable network configuration
+- Improved infrastructure stability
+
+#### Lessons Learned
+
+Infrastructure servers should use static IP addresses whenever possible.
+
+Active Directory and DNS services are easier to manage and troubleshoot when infrastructure systems maintain predictable network addresses.
+
 ## DNS Administration and Troubleshooting
 
 ### DNS Configuration
