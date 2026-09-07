@@ -174,7 +174,7 @@ Configured a static IP address on the external network adapter of DC01.
 
 ```text
 External Interface
-IP Address: 192.168.x.x/24
+IP Address: 192.168.x.x/22
 ```
 
 The internal lab network interface remained configured as:
