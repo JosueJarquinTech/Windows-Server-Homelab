@@ -577,78 +577,230 @@ to resolve through DC01 while allowing internet traffic to continue using standa
 
 ---
 
-## DHCP and Hyper-V Network Expansion
+---
+## DHCP, NAT, and Automated Client Provisioning
 
 ### Objective
 
-Simplify onboarding future virtual machines into the Active Directory environment.
+Design and validate an internal Hyper-V network that allows new virtual machines to automatically receive network configuration, discover Active Directory resources, join the domain, obtain certificates, and access the internet without manual configuration.
 
-### Design
+### Internal Network Design
 
-Created a dedicated internal Hyper-V network.
+To simplify future VM deployments, a dedicated internal Hyper-V network was created and connected to a second network adapter on DC01.
 
-Added a second virtual network adapter to DC01 and configured an isolated lab subnet.
+#### Network Configuration
 
-Configured DHCP to automatically provide:
+```text
+DC01
+
+External NIC
+IP Address: 192.168.4.130
+
+Internal NIC
+IP Address: 10.0.0.10
+```
+
+The external interface provides access to the home network and internet resources, while the internal interface hosts Active Directory infrastructure services for lab systems.
+
+---
+
+### DHCP Deployment
+
+Configured a DHCP scope on DC01 to automatically provide:
 
 - IP Address
 - Subnet Mask
 - DNS Server
-- Domain Configuration
+- Default Gateway
 
-### Goal
+This allows newly deployed virtual machines to obtain the required network configuration without manual intervention.
 
-Allow future virtual machines to:
+#### Benefits
 
-- Automatically receive network settings.
-- Resolve Active Directory resources.
-- Join the domain without manual DNS configuration.
-
-**Validation and testing currently in progress.**
+- Simplified client deployment
+- Consistent DNS configuration
+- Reduced manual administration
+- Improved scalability for future lab expansion
 
 ---
 
-## Key Skills Demonstrated
+### NAT Configuration and Internet Access
 
-### Windows Server Administration
+#### Issue
 
-- Active Directory Domain Services
-- DNS
-- DHCP
-- Active Directory Certificate Services
-- Group Policy
-- File Services
+During initial testing, domain connectivity functioned correctly, but clients connected to the internal network were unable to access internet resources.
 
-### Networking
+#### Investigation
 
-- DNS Troubleshooting
-- DNS Forwarders
-- Split DNS
-- DHCP Configuration
-- Hyper-V Networking
+Verified:
 
-### Security
+- DHCP leases were being assigned successfully.
+- DNS resolution was functioning correctly.
+- Domain Controller discovery was operational.
+- Active Directory domain joins were successful.
 
-- Enterprise PKI
-- Certificate Management
-- Administrative Account Separation
-- Secure Remote Access
+Further investigation determined that Network Address Translation (NAT) had not been configured for the internal subnet.
 
-### Troubleshooting
+#### Resolution
 
-- DNS Resolution Issues
-- RDP Certificate Trust Problems
-- Group Policy Deployment Issues
-- UNC Path Dependencies
-- Split DNS Configuration
-- Hyper-V Network Design
+Configured NAT using PowerShell:
+
+```powershell
+New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "10.0.0.0/24"
+```
+
+Configured DHCP Option 003 (Router) to provide:
+
+```text
+10.0.0.10
+```
+
+as the default gateway for internal clients.
+
+#### Result
+
+- Internet connectivity restored for internal clients.
+- Domain connectivity maintained.
+- Centralized routing through DC01.
+- Successful end-to-end network functionality.
+
+---
+
+### Windows 11 Test Client Validation
+
+To validate the new network design, a Windows 11 Pro virtual machine was deployed on the internal Hyper-V network.
+
+#### Virtual Machine Specifications
+
+```text
+2 vCPU
+4 GB RAM
+64 GB Dynamic Disk
+```
+
+#### Validation Results
+
+Successfully verified that the client automatically:
+
+- Obtained a DHCP lease
+- Received DNS configuration
+- Resolved domain resources
+- Located the Domain Controller
+- Joined the Active Directory domain
+- Received a computer certificate through auto-enrollment
+- Accessed internet resources through NAT
+
+No manual network configuration was required.
+
+---
+
+## Public Key Infrastructure (PKI) Expansion
+
+### Objective
+
+Expand the previously deployed Enterprise Root Certification Authority to automatically issue certificates to domain-joined computers.
+
+### Certificate Template Deployment
+
+Created a custom computer certificate template:
+
+```text
+Computer AutoEnroll
+```
+
+Configured the following permissions for:
+
+```text
+Domain Computers
+```
+
+- Read
+- Enroll
+- AutoEnroll
+
+Published the template through:
+
+```text
+josue-DC01-CA
+```
+
+to allow certificate issuance.
+
+---
+
+### Automatic Certificate Enrollment
+
+Created and linked a Group Policy Object named:
+
+```text
+PKI - Certificate Auto Enrollment
+```
+
+Configured:
+
+```text
+Certificate Services Client - Auto-Enrollment
+```
+
+to automatically enroll eligible domain-joined computers.
+
+#### Validation
+
+Validated the deployment using a newly provisioned Windows 11 client.
+
+Verified:
+
+- Group Policy processing
+- Automatic certificate enrollment
+- Certificate issuance from the Enterprise Root CA
+
+#### Result
+
+- Automated certificate deployment
+- Reduced administrative overhead
+- Improved understanding of Public Key Infrastructure (PKI)
+- Successfully validated certificate lifecycle automation using Active Directory and Group Policy
+
+---
+
+## Key Lessons Learned
+
+- DHCP dramatically simplifies onboarding of new systems.
+- DNS is critical for Active Directory authentication and service discovery.
+- A correctly configured default gateway is required for communication outside the local subnet.
+- NAT is required to provide internet access to isolated internal networks.
+- Certificate auto-enrollment extends the value of Active Directory Certificate Services by automating certificate deployment and renewal.
+- Hyper-V networking can be used to simulate enterprise network segmentation and client provisioning workflows.
+
+### Outcome
+
+The final design allows a newly deployed virtual machine to automatically:
+
+```text
+Boot
+↓
+Receive DHCP Configuration
+↓
+Receive DNS Configuration
+↓
+Locate DC01
+↓
+Join Active Directory
+↓
+Receive Group Policy
+↓
+Auto-Enroll for a Certificate
+↓
+Access Internet Through NAT
+```
+
+This significantly reduced manual configuration requirements and created a repeatable process for onboarding future systems into the lab environment.
+---
 
 ---
 
 ## Future Improvements
 
-- Complete DHCP validation testing
-- Configure NAT routing for lab network
 - Build a Windows 11 Gold Image
 - PowerShell automation
 - Deploy a second Domain Controller
