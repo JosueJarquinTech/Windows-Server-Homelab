@@ -9,6 +9,7 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 - DNS
 - DHCP
 - PKI / Active Directory Certificate Services
+- Certificate Auto-Enrollment
 - Group Policy
 - Group Policy Preferences
 - Hyper-V
