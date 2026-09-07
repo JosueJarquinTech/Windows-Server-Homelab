@@ -356,43 +356,6 @@ Verified:
 
 ---
 
-## Key Lessons Learned
-
-- DHCP dramatically simplifies onboarding of new systems.
-- DNS is critical for Active Directory authentication and service discovery.
-- A correctly configured default gateway is required for communication outside the local subnet.
-- NAT is required to provide internet access to isolated internal networks.
-- Certificate auto-enrollment extends the value of Active Directory Certificate Services by automating certificate deployment and renewal.
-- Hyper-V networking can be used to simulate enterprise network segmentation and client provisioning workflows.
-
-### Outcome
-
-The final design allows a newly deployed virtual machine to automatically:
-
-```text
-Boot
-↓
-Receive DHCP Configuration
-↓
-Receive DNS Configuration
-↓
-Locate DC01
-↓
-Join Active Directory
-↓
-Receive Group Policy
-↓
-Auto-Enroll for a Certificate
-↓
-Access Internet Through NAT
-```
-
-This significantly reduced manual configuration requirements and created a repeatable process for onboarding future systems into the lab environment.
----
-
----
----
-
 ## RDP Certificate Trust Troubleshooting
 
 ### Issue
@@ -797,74 +760,6 @@ Successfully verified that the client automatically:
 
 No manual network configuration was required.
 
----
-
-## Public Key Infrastructure (PKI) Expansion
-
-### Objective
-
-Expand the previously deployed Enterprise Root Certification Authority to automatically issue certificates to domain-joined computers.
-
-### Certificate Template Deployment
-
-Created a custom computer certificate template:
-
-```text
-Computer AutoEnroll
-```
-
-Configured the following permissions for:
-
-```text
-Domain Computers
-```
-
-- Read
-- Enroll
-- AutoEnroll
-
-Published the template through:
-
-```text
-josue-DC01-CA
-```
-
-to allow certificate issuance.
-
----
-
-### Automatic Certificate Enrollment
-
-Created and linked a Group Policy Object named:
-
-```text
-PKI - Certificate Auto Enrollment
-```
-
-Configured:
-
-```text
-Certificate Services Client - Auto-Enrollment
-```
-
-to automatically enroll eligible domain-joined computers.
-
-#### Validation
-
-Validated the deployment using a newly provisioned Windows 11 client.
-
-Verified:
-
-- Group Policy processing
-- Automatic certificate enrollment
-- Certificate issuance from the Enterprise Root CA
-
-#### Result
-
-- Automated certificate deployment
-- Reduced administrative overhead
-- Improved understanding of Public Key Infrastructure (PKI)
-- Successfully validated certificate lifecycle automation using Active Directory and Group Policy
 
 ---
 
