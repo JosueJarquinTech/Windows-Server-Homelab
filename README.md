@@ -12,10 +12,11 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 - Group Policy
 - Group Policy Preferences
 - Hyper-V
-- Tailscale
+- Tailscale / Split DNS
 - Network Troubleshooting
 - Remote Administration
 - File Services
+- NAT
 
 ## Project Goals
 
@@ -115,32 +116,78 @@ Successfully tested interactive logons using both standard and administrative ac
 ## Lab Architecture
 
 ```text
-MacBook M2
-│
-├── Tailscale
-│
-└── Parallels Desktop
-     └── Windows 11 Pro Client
-
-Dell Laptop
-│
-├── Windows 11 Pro Host
-│
-└── Hyper-V
-      │
-      └── DC01
-            ├── Active Directory Domain Services
-            ├── DNS
-            ├── DHCP
-            ├── Active Directory Certificate Services
-            ├── File Shares
-            └── Tailscale
+Internet
+    │
+    ▼
+Home Router
+    │
+    ├─────────────────────────────────────────┐
+    │                                         │
+    ▼                                         ▼
+Dell Precision 5560                      MacBook M2
+Windows 11 Pro Host                      macOS Host
+│                                         │
+└── Hyper-V                               └── Parallels Desktop
+     │                                         │
+     └── DC01                                 └── Windows 11 Pro Client
+          Windows Server 2022                      └── Tailscale
+          │
+          ├── External NIC
+          │     192.168.x.x
+          │
+          ├── Internal NIC
+          │     10.0.0.10
+          │
+          ├── Active Directory Domain Services
+          ├── DNS
+          ├── DHCP
+          ├── NAT
+          ├── Active Directory Certificate Services
+          ├── File Services
+          └── Tailscale
+                │
+                ▼
+          Hyper-V Internal Switch
+                │
+                ├── Windows 11 Test VM 01
+                ├── Windows 11 Test VM 02
+                └── Future Domain Clients
 
 Domain:
 josue.lab
 ```
 
----
+### Architecture Overview
+
+The primary lab environment is hosted on a Dell Precision 5560 running Windows 11 Pro and Hyper-V.
+
+DC01 is a Windows Server 2022 virtual machine that provides:
+
+- Active Directory Domain Services
+- DNS
+- DHCP
+- NAT
+- Active Directory Certificate Services (AD CS)
+- File Services
+- Secure remote access through Tailscale
+
+The server is configured with two network adapters:
+
+```text
+External NIC
+192.168.x.x
+```
+
+Connected to the home network and internet.
+
+```text
+Internal NIC
+10.0.0.10
+```
+
+Connected to a dedicated Hyper-V internal network used for domain-joined lab systems.
+
+A separate Windows 11 Pro virtual machine hosted in Parallels Desktop on a MacBook M2 is used for remote administration and testing. Tailscale and Split DNS allow secure administration of lab resources from external networks.
 
 ---
 
@@ -250,7 +297,7 @@ Active Directory relies heavily on DNS for authentication, domain joins, Group P
 
 ### Objective
 
-Implement an internal Public Key Infrastructure (PKI) to support certificate-based services within the lab environment.
+Implement an internal Public Key Infrastructure (PKI) to support certificate-based services and automated certificate deployment throughout the lab environment.
 
 ### Deployment
 
@@ -266,32 +313,20 @@ Configured:
 Enterprise Root CA
 ```
 
-with:
+using:
 
 - New private key
 - SHA256 cryptography
 
-### Configuration
-
-Enabled:
+Created the Certification Authority:
 
 ```text
-Certificate Services Client Auto-Enrollment
+josue-DC01-CA
 ```
 
-through Group Policy.
+This established a trusted internal Certificate Authority capable of issuing certificates to domain-joined systems.
 
-### Outcome
-
-- Certificates deploy automatically to domain computers.
-- Simplified certificate management.
-- Improved trust relationships for internal services.
-
-## Public Key Infrastructure (PKI) Expansion
-
-### Objective
-
-Expand the previously deployed Enterprise Root Certification Authority to automatically issue certificates to domain-joined computers.
+---
 
 ### Certificate Template Deployment
 
@@ -317,7 +352,7 @@ Published the template through:
 josue-DC01-CA
 ```
 
-to allow certificate issuance.
+to allow automatic certificate issuance.
 
 ---
 
@@ -337,24 +372,51 @@ Certificate Services Client - Auto-Enrollment
 
 to automatically enroll eligible domain-joined computers.
 
-#### Validation
+This enables certificate deployment without requiring manual administrator intervention.
 
-Validated the deployment using a newly provisioned Windows 11 client.
+---
+
+### Validation
+
+Validated the deployment using newly provisioned Windows 11 domain clients connected to the Hyper-V internal network.
 
 Verified:
 
 - Group Policy processing
 - Automatic certificate enrollment
-- Certificate issuance from the Enterprise Root CA
+- Computer certificate issuance
+- Enterprise Root CA functionality
+- Successful certificate requests from domain-joined computers
 
-#### Result
+Issued certificates were successfully generated using the:
 
-- Automated certificate deployment
-- Reduced administrative overhead
-- Improved understanding of Public Key Infrastructure (PKI)
-- Successfully validated certificate lifecycle automation using Active Directory and Group Policy
+```text
+Computer AutoEnroll
+```
+
+template and issued by:
+
+```text
+josue-DC01-CA
+```
 
 ---
+
+### Outcome
+
+- Automated certificate deployment
+- Reduced certificate administration overhead
+- Improved understanding of enterprise PKI concepts
+- Successfully implemented certificate lifecycle automation through Active Directory and Group Policy
+- Established a foundation for certificate-based authentication and secure internal services
+
+### Lessons Learned
+
+- Enterprise PKI becomes significantly more powerful when integrated with Active Directory.
+- Certificate templates control who can request certificates and under what conditions.
+- Auto-enrollment allows domain-joined computers to automatically obtain certificates without manual installation.
+- Group Policy can automate certificate enrollment and renewal throughout the environment.
+- Certificate Services provides the foundation for many enterprise technologies, including secure authentication, VPNs, Remote Desktop Services, and web services.
 
 ## RDP Certificate Trust Troubleshooting
 
