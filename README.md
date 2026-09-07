@@ -594,10 +594,10 @@ To simplify future VM deployments, a dedicated internal Hyper-V network was crea
 DC01
 
 External NIC
-IP Address: 192.168.4.130
+IP Address: 192.168.x.x
 
 Internal NIC
-IP Address: 10.0.0.10
+IP Address: 10.0.x.x
 ```
 
 The external interface provides access to the home network and internet resources, while the internal interface hosts Active Directory infrastructure services for lab systems.
