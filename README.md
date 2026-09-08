@@ -27,7 +27,7 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 - Document lessons learned and real-world issues encountered
 - Prepare for a Junior System Administrator role
 
-  ## Current Environment Status
+## Current Environment Status
 
 ✅ Active Directory Domain Services
 
