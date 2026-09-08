@@ -263,6 +263,10 @@ _msdcs.josue.lab
 
 ### DNS Forwarders
 
+<p align="center">
+  <img src="dns forwarders.png
+</p>
+
 Configured DNS forwarders to provide external name resolution for domain clients.
 
 Forwarders configured:
