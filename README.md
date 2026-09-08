@@ -1,3 +1,5 @@
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/5b72108bf56d2ce4f527e618d0cad399472e10dc/Images/LAB%20wallpaper.png)
+
 # Windows Server Home Lab
 
 A hands-on Windows Server infrastructure project built to develop System Administration skills through the deployment, administration, and troubleshooting of Active Directory, DNS, PKI, Group Policy, Hyper-V networking, and secure remote administration.
