@@ -262,9 +262,7 @@ _msdcs.josue.lab
 
 ### DNS Forwarders
 
-<p align="center">
-  <img src="dns forwarders.png
-</p>
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/dns%20forwarders.png)
 
 Configured DNS forwarders to provide external name resolution for domain clients.
 
@@ -338,6 +336,9 @@ This established a trusted internal Certificate Authority capable of issuing cer
 
 ### Certificate Template Deployment
 
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/Certificate-template.png)
+
+
 Created a custom computer certificate template:
 
 ```text
@@ -367,6 +368,7 @@ to allow automatic certificate issuance.
 ### Automatic Certificate Enrollment
 
 Created and linked a Group Policy Object named:
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/auto-enrollment%20GPO.png)
 
 ```text
 PKI - Certificate Auto Enrollment
@@ -489,6 +491,7 @@ Standard users were prevented from accessing Control Panel while administrative 
 ---
 
 ### Drive Mapping GPO
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/Drive-mapping%20GPO.png)
 
 ### Objective
 
@@ -520,6 +523,8 @@ Domain users automatically received the mapped drive upon sign-in.
 ---
 
 ## Wallpaper Deployment Project
+
+
 
 This became one of the most valuable troubleshooting exercises within the lab.
 
@@ -612,6 +617,7 @@ If DNS resolution or share access failed, the wallpaper could not be applied.
 Implemented Group Policy Preferences.
 
 ### Folder Creation
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/Wallpaper-GPO-Folder%20creation.png)
 
 Automatically created:
 
@@ -623,7 +629,11 @@ on client computers.
 
 ### File Copy
 
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/e0036b42226e9f12676ad80e11625cce5362d5e3/Images/Wallpaper-GPO-FIle%20copy.png)
+
 Copied wallpaper from:
+
+
 
 ```text
 \\dc01\shared\wallpaper
@@ -638,6 +648,8 @@ C:\Deploy\Wallpaper
 ### Updated Policy
 
 Modified the wallpaper GPO to use:
+
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/4066df1aacf890376aafefb65e96be5c3473333c/Images/Wallpaper-GPO.png)
 
 ```text
 C:\Deploy\Wallpaper\josue.lab.wallpaper.jpg
@@ -654,6 +666,8 @@ instead of the network share.
 ---
 
 ## Secure Remote Administration with Tailscale
+
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/4066df1aacf890376aafefb65e96be5c3473333c/Images/Tailscale%20console.png)
 
 Installed Tailscale on:
 
@@ -743,6 +757,7 @@ The external interface provides access to the home network and internet resource
 ---
 
 ### DHCP Deployment
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/4066df1aacf890376aafefb65e96be5c3473333c/Images/DHCP%20Scope.png)
 
 Configured a DHCP scope on DC01 to automatically provide:
 
@@ -788,6 +803,8 @@ New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "10.0.0.0/24"
 ```
 
 Configured DHCP Option 003 (Router) to provide:
+
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/58f1fa0fed75dd312945cd73118a5d0b302b81b8/Images/NAT%20Configuration.png)
 
 ```text
 10.0.0.10
@@ -871,7 +888,6 @@ This significantly reduced manual configuration requirements and created a repea
 
 ## Future Improvements
 
-- Build a Windows 11 Gold Image
 - PowerShell automation
 - Deploy a second Domain Controller
 - Active Directory replication testing
