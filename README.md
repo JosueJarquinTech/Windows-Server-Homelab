@@ -892,9 +892,8 @@ This significantly reduced manual configuration requirements and created a repea
 
 ## Future Improvements
 
-- PowerShell automation
-- Deploy a second Domain Controller
-- Active Directory replication testing
-- Backup and recovery procedures
+- PowerShell automation for Active Directory administration
+- Automated user provisioning from CSV files
+- Automated group membership management
 - Microsoft Entra ID
 - Azure Administration (AZ-104)
