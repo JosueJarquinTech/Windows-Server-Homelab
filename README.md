@@ -30,7 +30,7 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 ## Technologies Used
 
 ### Infrastructure
-- Windows Server 2022
+- Windows Server 2025
 - Windows 11 Pro
 - Hyper-V
 - Parallels Desktop
@@ -131,7 +131,7 @@ Windows 11 Pro Host                      macOS Host
 └── Hyper-V                               └── Parallels Desktop
      │                                         │
      └── DC01                                 └── Windows 11 Pro Client
-          Windows Server 2022                      └── Tailscale
+          Windows Server 2025                      └── Tailscale
           │
           ├── External NIC
           │     192.168.x.x
@@ -162,7 +162,7 @@ josue.lab
 
 The primary lab environment is hosted on a Dell Precision 5560 running Windows 11 Pro and Hyper-V.
 
-DC01 is a Windows Server 2022 virtual machine that provides:
+DC01 is a Windows Server 2025 virtual machine that provides:
 
 - Active Directory Domain Services
 - DNS
