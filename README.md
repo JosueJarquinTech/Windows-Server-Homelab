@@ -27,6 +27,35 @@ A hands-on Windows Server infrastructure project built to develop System Adminis
 - Document lessons learned and real-world issues encountered
 - Prepare for a Junior System Administrator role
 
+  ## Current Environment Status
+
+✅ Active Directory Domain Services
+
+✅ DNS
+
+✅ DHCP
+
+✅ NAT
+
+✅ Active Directory Certificate Services
+
+✅ Certificate Auto-Enrollment
+
+✅ Group Policy
+
+✅ Group Policy Preferences
+
+✅ File Services
+
+✅ Tailscale Remote Administration
+
+✅ Split DNS
+
+✅ Automated Client Provisioning
+
+✅ Domain-Joined Windows 11 Clients
+``
+
 ## Technologies Used
 
 ### Infrastructure
