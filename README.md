@@ -252,9 +252,8 @@ Active Directory and DNS services are easier to manage and troubleshoot when inf
 
 Verified the following Active Directory integrated DNS zones:
 
-<p align="center">
-  <img src="images/dns-zones.png
-</p>
+![DNS Zones](images/dns-zones.png)
+
 
 ```text
 josue.lab
