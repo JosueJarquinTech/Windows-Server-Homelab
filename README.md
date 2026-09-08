@@ -864,19 +864,23 @@ No manual network configuration was required.
 The final design allows a newly deployed virtual machine to automatically:
 
 ```text
-Boot
+Create Virtual Machine
 ↓
 Receive DHCP Configuration
 ↓
 Receive DNS Configuration
 ↓
-Locate DC01
+Locate Domain Controller
 ↓
 Join Active Directory
 ↓
 Receive Group Policy
 ↓
-Auto-Enroll for a Certificate
+Map Network Drive
+↓
+Deploy Corporate Wallpaper
+↓
+Auto-Enroll for Certificate
 ↓
 Access Internet Through NAT
 ```
