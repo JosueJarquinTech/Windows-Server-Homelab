@@ -920,27 +920,474 @@ This significantly reduced manual configuration requirements and created a repea
 ---
 
 ---
+# macOS Active Directory Integration, DNS Optimization, and Backup & Recovery
 
-# Backup and Recovery
+## Overview
 
-A critical responsibility of a Systems Administrator is ensuring infrastructure can be recovered following accidental deletion, service corruption, operating system failure, or complete server loss.
+This project focused on extending the existing Windows Server 2025 homelab by:
 
-This section documents the backup and recovery strategy implemented in the Windows Server Home Lab environment.
+- Integrating a macOS device with Active Directory
+- Implementing Tailscale Split DNS for remote administration
+- Troubleshooting Active Directory service discovery
+- Resolving multi-NIC DNS registration issues
+- Implementing a layered backup and recovery strategy
+- Validating multiple recovery methods
+
+The exercise provided hands-on experience with:
+
+- Active Directory
+- DNS
+- LDAP
+- Kerberos
+- Tailscale
+- Hyper-V
+- Backup and Recovery
+- Windows Server Administration
 
 ---
 
-## Recovery Strategy
+# macOS Active Directory Integration
 
-The lab utilizes a layered recovery approach designed to address different types of failures.
+## Objective
+
+Join a macOS device to the:
+
+```text
+josue.lab
+```
+
+Active Directory domain and authenticate using domain credentials remotely through Tailscale.
+
+---
+
+# Initial Environment
+
+## Domain Controller
+
+```text
+DC01
+```
+
+Services:
+
+```text
+Active Directory
+DNS
+DHCP
+NAT
+AD Certificate Services
+Tailscale
+```
+
+## Network Layout
+
+### External Interface
+
+```text
+192.168.4.130
+```
+
+### Internal Interface
+
+```text
+10.0.0.10
+```
+
+### Tailscale Address
+
+```text
+100.x.x.x
+```
+
+### Domain
+
+```text
+josue.lab
+```
+
+---
+
+# Initial Issue
+
+When attempting to bind the Mac to Active Directory using Directory Utility, macOS returned:
+
+```text
+Authentication server could not be contacted
+```
+
+This required troubleshooting across multiple protocol layers.
+
+---
+
+# Active Directory Discovery Validation
+
+## DNS Resolution Test
+
+Verified Active Directory DNS resolution:
+
+```bash
+dig dc01.josue.lab
+```
+
+Result:
+
+```text
+dc01.josue.lab
+192.168.4.130
+10.0.0.10
+100.x.x.x
+```
+
+DNS resolution was functioning successfully.
+
+---
+
+## LDAP Service Discovery Test
+
+Validated Active Directory SRV records:
+
+```bash
+dig SRV _ldap._tcp.dc._msdcs.josue.lab
+```
+
+Result:
+
+```text
+dc01.josue.lab
+```
+
+This confirmed:
+
+- Active Directory DNS was functioning
+- Domain Controller discovery was operational
+- Split DNS configuration was working
+
+---
+
+## Kerberos Service Discovery Test
+
+```bash
+dig SRV _kerberos._tcp.josue.lab
+```
+
+This validated Kerberos service discovery.
+
+---
+
+# Network Connectivity Testing
+
+## LDAP Port Validation
+
+Initially tested:
+
+```bash
+nc -vz dc01.josue.lab 389
+```
+
+Result:
+
+```text
+No route to host
+```
+
+This suggested network path selection issues rather than DNS failures.
+
+---
+
+## SMB Validation
+
+Successfully accessed:
+
+```text
+smb://dc01.josue.lab
+```
+
+Available shares:
+
+```text
+NETLOGON
+SYSVOL
+Shared
+```
+
+This proved:
+
+- Domain Controller accessibility
+- SMB connectivity
+- DNS functionality
+- Tailscale connectivity
+
+---
+
+## RDP Validation
+
+Tested:
+
+```bash
+nc -vz dc01.josue.lab 3389
+```
+
+Result:
+
+```text
+Connection succeeded
+```
+
+This confirmed the Domain Controller was reachable.
+
+---
+
+# LDAP and Kerberos Validation
+
+## Verify LDAP Service
+
+On DC01:
+
+```powershell
+Test-NetConnection -Port 389 localhost
+```
+
+Result:
+
+```text
+TcpTestSucceeded : True
+```
+
+---
+
+## Verify Kerberos Service
+
+```powershell
+Test-NetConnection -Port 88 localhost
+```
+
+Result:
+
+```text
+TcpTestSucceeded : True
+```
+
+This confirmed:
+
+- LDAP was operational
+- Kerberos was operational
+- Active Directory services were healthy
+
+---
+
+# DNS Registration Investigation
+
+During troubleshooting, the following DNS response was observed:
+
+```text
+dc01.josue.lab
+├─ 192.168.4.130
+├─ 100.x.x.x
+└─ 10.0.0.10
+```
+
+The:
+
+```text
+10.0.0.10
+```
+
+address belonged to the Hyper-V internal network and was not reachable by external clients.
+
+---
+
+# Internal NIC DNS Registration Fix
+
+To prevent advertising the internal-only address externally, DNS registration was disabled on the internal adapter.
+
+## Configuration Change
+
+```text
+Internal NIC
+→ IPv4
+→ Advanced
+→ DNS
+→ Uncheck:
+   Register this connection's addresses in DNS
+```
+
+Then refreshed DNS:
+
+```cmd
+ipconfig /flushdns
+ipconfig /registerdns
+```
+
+Restarted Netlogon:
+
+```powershell
+Restart-Service Netlogon
+```
+
+---
+
+# Impact Validation
+
+Internal domain-joined clients were tested.
+
+Validation commands:
+
+```cmd
+ipconfig /all
+
+nslookup dc01.josue.lab
+
+gpupdate /force
+
+nltest /dsgetdc:josue.lab
+```
+
+Result:
+
+```text
+No impact to internal clients
+```
+
+Internal VMs continued:
+
+- Receiving DHCP leases
+- Resolving DNS
+- Processing Group Policy
+- Authenticating successfully
+
+---
+
+# Tailscale Split DNS
+
+## Objective
+
+Allow external devices to resolve:
+
+```text
+josue.lab
+```
+
+without changing local DNS settings.
+
+## Result
+
+```text
+josue.lab
+↓
+DC01 DNS
+
+Everything Else
+↓
+Normal Internet DNS
+```
+
+Benefits:
+
+- Remote Active Directory access
+- Remote name resolution
+- Domain resource access
+- No permanent DNS changes required
+
+---
+
+# Active Directory Binding Success
+
+Successfully bound the Mac to:
+
+```text
+josue.lab
+```
+
+Validation:
+
+```bash
+id jjarquin@josue.lab
+```
+
+Result:
+
+```text
+User successfully resolved through Active Directory
+```
+
+This confirmed:
+
+- AD Bind Successful
+- LDAP Functional
+- Kerberos Functional
+- DNS Functional
+
+---
+
+# Login Window Issue
+
+Despite successful binding, domain logons initially failed.
+
+Error:
+
+```text
+Server accounts are not available
+```
+
+Investigation revealed:
+
+```text
+Logout
+↓
+Wi-Fi disconnects
+↓
+Tailscale disconnects
+↓
+Domain Controller unreachable
+↓
+Authentication unavailable
+```
+
+---
+
+# Mobile Account Configuration
+
+Enabled:
+
+```text
+Create mobile account at login
+```
+
+through:
+
+```text
+Directory Utility
+→ Active Directory
+→ User Experience
+```
+
+This allowed future support for cached domain credentials once a successful domain login is completed.
+
+---
+
+# Lessons Learned
+
+- Active Directory authentication requires DNS, LDAP, and Kerberos to function simultaneously.
+- SRV records drive Domain Controller discovery.
+- Multi-homed Domain Controllers can introduce DNS complications.
+- Internal-only interfaces should not always be advertised externally.
+- Tailscale Split DNS provides an effective remote-access solution.
+- Successful domain binding does not guarantee successful login-window authentication.
+
+---
+
+# Backup and Recovery
+
+A layered backup strategy was implemented to protect against both administrative mistakes and infrastructure failures.
+
+---
+
+# Recovery Strategy
 
 ```text
 Deleted User
 ↓
-Active Directory Recycle Bin
-
-Deleted Group
-↓
-Active Directory Recycle Bin
+AD Recycle Bin
 
 Corrupted Active Directory
 ↓
@@ -950,9 +1397,9 @@ Lost Virtual Machine
 ↓
 Hyper-V Export
 
-DHCP Configuration Loss
+Lost DHCP Configuration
 ↓
-DHCP Server Export
+DHCP Export
 ```
 
 ---
@@ -961,76 +1408,95 @@ DHCP Server Export
 
 ## Purpose
 
-Provides rapid recovery of deleted Active Directory objects without requiring a backup restore.
-
-## Protected Objects
-
-- Users
-- Groups
-- Computers
-- Organizational Units (OUs)
-
-## Configuration
-
-Enabled through:
-
-```text
-Server Manager
-→ Tools
-→ Active Directory Administrative Center
-→ Enable Recycle Bin
-```
+Recover deleted Active Directory objects without restoring backups.
 
 ## Recovery Test
 
-### Created
+Created:
 
 ```text
 TestUser
 ```
 
-### Deleted
+Deleted:
 
 ```text
 TestUser
 ```
 
-### Restored
+Restored:
 
 ```text
-Active Directory Administrative Center
-→ Deleted Objects
+Deleted Objects
 → Restore
 ```
 
-## Validation
+Validated:
 
-The restored account:
-
-- Returned to Active Directory successfully
-- Restored to its original location
-- Retained original attributes
-
-## Lessons Learned
-
-Active Directory Recycle Bin provides the fastest recovery option for accidentally deleted directory objects and eliminates the need to restore from backup for routine administrative mistakes.
+- User restored successfully
+- Original attributes retained
+- Original location restored
 
 ---
 
-# Hyper-V Virtual Machine Export
+# Hyper-V Checkpoint Cleanup
+
+## Discovery
+
+DC01 virtual disk reported:
+
+```text
+Differencing Virtual Hard Disk
+```
+
+Investigation revealed:
+
+```text
+4 Hyper-V checkpoints
+```
+
+approximately one month old.
+
+---
+
+## Resolution
+
+Deleted all checkpoints:
+
+```text
+Hyper-V Manager
+→ DC01
+→ Delete Checkpoint
+```
+
+After merge completion:
+
+```text
+Disk Type:
+Dynamically Expanding VHDX
+```
+
+---
+
+## Lesson Learned
+
+```text
+Checkpoint
+≠
+Backup
+```
+
+Checkpoints are temporary rollback mechanisms and should not replace proper backups.
+
+---
+
+# Hyper-V Export
 
 ## Purpose
 
-Provides complete virtual machine recovery in the event of:
+Full virtual machine recovery.
 
-- Virtual machine corruption
-- Failed configuration changes
-- Guest operating system failure
-- Complete VM loss
-
-## Export Procedure
-
-Performed from:
+## Procedure
 
 ```text
 Hyper-V Manager
@@ -1038,47 +1504,58 @@ Hyper-V Manager
 → Export
 ```
 
-## Protected Components
+Protected:
 
-- Windows Server Operating System
+- Windows Server
 - Active Directory
 - DNS
 - DHCP
-- Active Directory Certificate Services
-- Group Policy Objects
+- AD CS
+- Group Policy
 - File Shares
 - Tailscale Configuration
-- Virtual Hardware Settings
 
-## Recovery Method
+Recovery:
 
 ```text
 Hyper-V Manager
 → Import Virtual Machine
 ```
 
-## Lessons Learned
+---
 
-A Hyper-V Export provides the quickest disaster recovery option for a virtualized Domain Controller by allowing the entire server to be restored without rebuilding services individually.
+# Dedicated Backup Storage
+
+Created a secondary virtual disk:
+
+```text
+E:
+```
+
+Purpose:
+
+```text
+System State Backups
+DHCP Exports
+Future Recovery Data
+```
+
+This separates backup data from the operating system volume.
 
 ---
 
 # System State Backup
 
-## Purpose
+## Components Protected
 
-Protects critical Active Directory infrastructure components without requiring restoration of the entire virtual machine.
-
-## Backup Components
-
-A System State Backup includes:
-
-- Active Directory Database (NTDS)
-- SYSVOL
-- DNS (AD-Integrated)
-- Windows Registry
-- COM+ Database
-- Boot Files
+```text
+Active Directory Database
+SYSVOL
+DNS
+Registry
+COM+ Database
+Boot Files
+```
 
 ## Configuration
 
@@ -1097,43 +1574,34 @@ Windows Server Backup
 → System State
 ```
 
-Backup Destination:
+Destination:
 
 ```text
-E:\Backups
+E:
 ```
-
-## Recovery Scenarios
-
-System State Recovery can be used for:
-
-- Active Directory database corruption
-- SYSVOL corruption
-- DNS corruption
-- Directory Services recovery
-- Domain Controller recovery scenarios
-
-## Lessons Learned
-
-System State Backups are specifically designed for recovering Active Directory-related services and are preferable to restoring an entire virtual machine when only AD infrastructure components are impacted.
 
 ---
 
-# DHCP Configuration Backup
+## When to Use
+
+Examples:
+
+```text
+Corrupted Active Directory
+Broken DNS
+SYSVOL Corruption
+Directory Services Recovery
+```
+
+---
+
+# DHCP Backup
 
 ## Purpose
 
-Protects DHCP server configuration for rapid recovery of network services.
+Quick recovery of DHCP services.
 
-## Protected Components
-
-- DHCP Scopes
-- Reservations
-- Scope Options
-- Server Configuration
-- Policies
-
-## Export Procedure
+## Export
 
 ```powershell
 Export-DhcpServer `
@@ -1141,140 +1609,53 @@ Export-DhcpServer `
 -File E:\DHCPBackup\DHCPConfig.xml
 ```
 
-## Recovery Procedure
+## Recovery
 
 ```powershell
 Import-DhcpServer `
 -ComputerName localhost `
--File E:\DHCPBackup\DHCPConfig.xml `
--BackupPath E:\DHCPBackup
+-File E:\DHCPBackup\DHCPConfig.xml
 ```
-
-## Lessons Learned
-
-Exporting DHCP separately allows rapid restoration of DHCP services without requiring a System State Restore or virtual machine recovery.
 
 ---
 
-# Backup Storage Design
-
-## Operating System Volume
+# Final Recovery Model
 
 ```text
-C:
+Deleted User
+↓
+AD Recycle Bin
+
+Deleted Group
+↓
+AD Recycle Bin
+
+Directory Service Corruption
+↓
+System State Backup
+
+DHCP Failure
+↓
+DHCP Export
+
+Virtual Machine Loss
+↓
+Hyper-V Export
 ```
-
-Contains:
-
-- Windows Server 2025
-- Active Directory
-- DNS
-- DHCP
-- AD CS
-- Installed Applications
-
-## Backup Volume
-
-```text
-E:
-```
-
-Dedicated backup storage containing:
-
-- System State Backups
-- DHCP Exports
-- Future Recovery Artifacts
-
-This separation provides better organization and mimics common enterprise backup practices.
-
----
-
-# Checkpoint Cleanup
-
-During the backup implementation process, four month-old Hyper-V checkpoints were identified.
-
-## Findings
-
-The Domain Controller VHDX was initially reported as:
-
-```text
-Differencing Virtual Hard Disk
-```
-
-This was caused by the existing checkpoints.
-
-## Resolution
-
-Deleted all obsolete checkpoints:
-
-```text
-Hyper-V Manager
-→ DC01
-→ Delete Checkpoint
-```
-
-After Hyper-V completed the merge process, the disk returned to:
-
-```text
-Dynamically Expanding Virtual Hard Disk
-```
-
-## Lesson Learned
-
-Hyper-V checkpoints are not backups.
-
-```text
-Checkpoint
-≠
-Backup
-```
-
-Checkpoints should be used only for temporary rollback operations, whereas exports and backups should be used for long-term recovery planning.
-
----
-
-# Recovery Matrix
-
-| Failure Scenario | Recovery Method |
-|-----------------|----------------|
-| Deleted User | Active Directory Recycle Bin |
-| Deleted Group | Active Directory Recycle Bin |
-| Active Directory Corruption | System State Backup |
-| DNS Corruption | System State Backup |
-| DHCP Configuration Loss | DHCP Export |
-| Virtual Machine Loss | Hyper-V Export |
-| Failed Configuration Changes | Hyper-V Export |
 
 ---
 
 # Key Takeaways
 
-- Backups are only valuable when recovery procedures are understood and tested.
-- Active Directory Recycle Bin provides rapid recovery of deleted objects.
-- System State Backups protect critical Active Directory services.
-- Hyper-V Exports provide complete virtual machine recovery.
-- DHCP exports simplify restoration of network services.
-- Hyper-V checkpoints should not be treated as backups.
-
-```text
-Object Recovery
-↓
-AD Recycle Bin
-
-Service Recovery
-↓
-System State Backup
-
-Network Services Recovery
-↓
-DHCP Export
-
-Disaster Recovery
-↓
-Hyper-V Export
-```
-
-This layered backup strategy ensures recovery options exist for both administrative errors and infrastructure-level failures.
+- Active Directory depends heavily on DNS, LDAP, and Kerberos.
+- SRV records are essential for Domain Controller discovery.
+- Multi-NIC Domain Controllers require careful DNS design.
+- Tailscale Split DNS enables seamless remote administration.
+- Hyper-V checkpoints are not backups.
+- Active Directory Recycle Bin provides fast object-level recovery.
+- System State Backups protect critical domain services.
+- Hyper-V Exports provide complete virtual machine disaster recovery.
+- Backup strategies should consist of multiple recovery layers rather than a single solution.
 
 ## Future Improvements
 
