@@ -921,6 +921,361 @@ This significantly reduced manual configuration requirements and created a repea
 
 ---
 
+# Backup and Recovery
+
+A critical responsibility of a Systems Administrator is ensuring infrastructure can be recovered following accidental deletion, service corruption, operating system failure, or complete server loss.
+
+This section documents the backup and recovery strategy implemented in the Windows Server Home Lab environment.
+
+---
+
+## Recovery Strategy
+
+The lab utilizes a layered recovery approach designed to address different types of failures.
+
+```text
+Deleted User
+↓
+Active Directory Recycle Bin
+
+Deleted Group
+↓
+Active Directory Recycle Bin
+
+Corrupted Active Directory
+↓
+System State Backup
+
+Lost Virtual Machine
+↓
+Hyper-V Export
+
+DHCP Configuration Loss
+↓
+DHCP Server Export
+```
+
+---
+
+# Active Directory Recycle Bin
+
+## Purpose
+
+Provides rapid recovery of deleted Active Directory objects without requiring a backup restore.
+
+## Protected Objects
+
+- Users
+- Groups
+- Computers
+- Organizational Units (OUs)
+
+## Configuration
+
+Enabled through:
+
+```text
+Server Manager
+→ Tools
+→ Active Directory Administrative Center
+→ Enable Recycle Bin
+```
+
+## Recovery Test
+
+### Created
+
+```text
+TestUser
+```
+
+### Deleted
+
+```text
+TestUser
+```
+
+### Restored
+
+```text
+Active Directory Administrative Center
+→ Deleted Objects
+→ Restore
+```
+
+## Validation
+
+The restored account:
+
+- Returned to Active Directory successfully
+- Restored to its original location
+- Retained original attributes
+
+## Lessons Learned
+
+Active Directory Recycle Bin provides the fastest recovery option for accidentally deleted directory objects and eliminates the need to restore from backup for routine administrative mistakes.
+
+---
+
+# Hyper-V Virtual Machine Export
+
+## Purpose
+
+Provides complete virtual machine recovery in the event of:
+
+- Virtual machine corruption
+- Failed configuration changes
+- Guest operating system failure
+- Complete VM loss
+
+## Export Procedure
+
+Performed from:
+
+```text
+Hyper-V Manager
+→ DC01
+→ Export
+```
+
+## Protected Components
+
+- Windows Server Operating System
+- Active Directory
+- DNS
+- DHCP
+- Active Directory Certificate Services
+- Group Policy Objects
+- File Shares
+- Tailscale Configuration
+- Virtual Hardware Settings
+
+## Recovery Method
+
+```text
+Hyper-V Manager
+→ Import Virtual Machine
+```
+
+## Lessons Learned
+
+A Hyper-V Export provides the quickest disaster recovery option for a virtualized Domain Controller by allowing the entire server to be restored without rebuilding services individually.
+
+---
+
+# System State Backup
+
+## Purpose
+
+Protects critical Active Directory infrastructure components without requiring restoration of the entire virtual machine.
+
+## Backup Components
+
+A System State Backup includes:
+
+- Active Directory Database (NTDS)
+- SYSVOL
+- DNS (AD-Integrated)
+- Windows Registry
+- COM+ Database
+- Boot Files
+
+## Configuration
+
+Installed Windows Server Backup:
+
+```powershell
+Install-WindowsFeature Windows-Server-Backup
+```
+
+Created backup through:
+
+```text
+Windows Server Backup
+→ Backup Once
+→ Custom
+→ System State
+```
+
+Backup Destination:
+
+```text
+E:\Backups
+```
+
+## Recovery Scenarios
+
+System State Recovery can be used for:
+
+- Active Directory database corruption
+- SYSVOL corruption
+- DNS corruption
+- Directory Services recovery
+- Domain Controller recovery scenarios
+
+## Lessons Learned
+
+System State Backups are specifically designed for recovering Active Directory-related services and are preferable to restoring an entire virtual machine when only AD infrastructure components are impacted.
+
+---
+
+# DHCP Configuration Backup
+
+## Purpose
+
+Protects DHCP server configuration for rapid recovery of network services.
+
+## Protected Components
+
+- DHCP Scopes
+- Reservations
+- Scope Options
+- Server Configuration
+- Policies
+
+## Export Procedure
+
+```powershell
+Export-DhcpServer `
+-ComputerName localhost `
+-File E:\DHCPBackup\DHCPConfig.xml
+```
+
+## Recovery Procedure
+
+```powershell
+Import-DhcpServer `
+-ComputerName localhost `
+-File E:\DHCPBackup\DHCPConfig.xml `
+-BackupPath E:\DHCPBackup
+```
+
+## Lessons Learned
+
+Exporting DHCP separately allows rapid restoration of DHCP services without requiring a System State Restore or virtual machine recovery.
+
+---
+
+# Backup Storage Design
+
+## Operating System Volume
+
+```text
+C:
+```
+
+Contains:
+
+- Windows Server 2025
+- Active Directory
+- DNS
+- DHCP
+- AD CS
+- Installed Applications
+
+## Backup Volume
+
+```text
+E:
+```
+
+Dedicated backup storage containing:
+
+- System State Backups
+- DHCP Exports
+- Future Recovery Artifacts
+
+This separation provides better organization and mimics common enterprise backup practices.
+
+---
+
+# Checkpoint Cleanup
+
+During the backup implementation process, four month-old Hyper-V checkpoints were identified.
+
+## Findings
+
+The Domain Controller VHDX was initially reported as:
+
+```text
+Differencing Virtual Hard Disk
+```
+
+This was caused by the existing checkpoints.
+
+## Resolution
+
+Deleted all obsolete checkpoints:
+
+```text
+Hyper-V Manager
+→ DC01
+→ Delete Checkpoint
+```
+
+After Hyper-V completed the merge process, the disk returned to:
+
+```text
+Dynamically Expanding Virtual Hard Disk
+```
+
+## Lesson Learned
+
+Hyper-V checkpoints are not backups.
+
+```text
+Checkpoint
+≠
+Backup
+```
+
+Checkpoints should be used only for temporary rollback operations, whereas exports and backups should be used for long-term recovery planning.
+
+---
+
+# Recovery Matrix
+
+| Failure Scenario | Recovery Method |
+|-----------------|----------------|
+| Deleted User | Active Directory Recycle Bin |
+| Deleted Group | Active Directory Recycle Bin |
+| Active Directory Corruption | System State Backup |
+| DNS Corruption | System State Backup |
+| DHCP Configuration Loss | DHCP Export |
+| Virtual Machine Loss | Hyper-V Export |
+| Failed Configuration Changes | Hyper-V Export |
+
+---
+
+# Key Takeaways
+
+- Backups are only valuable when recovery procedures are understood and tested.
+- Active Directory Recycle Bin provides rapid recovery of deleted objects.
+- System State Backups protect critical Active Directory services.
+- Hyper-V Exports provide complete virtual machine recovery.
+- DHCP exports simplify restoration of network services.
+- Hyper-V checkpoints should not be treated as backups.
+
+```text
+Object Recovery
+↓
+AD Recycle Bin
+
+Service Recovery
+↓
+System State Backup
+
+Network Services Recovery
+↓
+DHCP Export
+
+Disaster Recovery
+↓
+Hyper-V Export
+```
+
+This layered backup strategy ensures recovery options exist for both administrative errors and infrastructure-level failures.
+
 ## Future Improvements
 
 - PowerShell automation for Active Directory administration
