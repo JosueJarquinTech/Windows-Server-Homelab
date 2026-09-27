@@ -920,7 +920,7 @@ This significantly reduced manual configuration requirements and created a repea
 ---
 
 ---
-# macOS Active Directory Integration, DNS Optimization, and Backup & Recovery
+# MacOS Active Directory Integration, DNS Optimization, and Backup & Recovery
 
 ## Overview
 
