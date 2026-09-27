@@ -1405,6 +1405,7 @@ DHCP Export
 ---
 
 # Active Directory Recycle Bin
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/6280667deb7683eb39b8b70953a0a9a43daff42c/Images/Recyclebin.png)
 
 ## Purpose
 
@@ -1491,6 +1492,7 @@ Checkpoints are temporary rollback mechanisms and should not replace proper back
 ---
 
 # Hyper-V Export
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/6280667deb7683eb39b8b70953a0a9a43daff42c/Images/Hyper-V%20export.png)
 
 ## Purpose
 
@@ -1545,6 +1547,7 @@ This separates backup data from the operating system volume.
 ---
 
 # System State Backup
+![image alt](https://github.com/JosueJarquinTech/Windows-Server-Homelab/blob/6280667deb7683eb39b8b70953a0a9a43daff42c/Images/Windowsserver%20backup.png)
 
 ## Components Protected
 
@@ -1660,7 +1663,5 @@ Hyper-V Export
 ## Future Improvements
 
 - PowerShell automation for Active Directory administration
-- Automated user provisioning from CSV files
-- Automated group membership management
 - Microsoft Entra ID
 - Azure Administration (AZ-104)
